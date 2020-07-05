@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.huikedu.sys.mapper.RoleMapper">
+
+    <sql id="baseList">
+          id,name,description,isDeleted
+    </sql>
+    <!--    添加-->
+    <insert id="insert" parameterType="Role" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_roles
+        values
+        	(null,#{name},#{description},0)
+    </insert>
+
+    <!--    修改-->
+    <update id="update" parameterType="Role">
+        update sys_roles
+        set name=#{name}, description=#{description}
+        <where>
+            <if test="id != null"> and id = #{id} </if>
+        </where>
+    </update>
+    <!--    删除 实现伪删除，修改isDelete的状态为true-->
+    <delete id="delete" parameterType="Long">
+            update  sys_roles set isDeleted=true where id=#{id}
+    </delete>
+
+    <!--    分页的方法-->
+    <select id="selectByPage" parameterType="map" resultType="Role">
+        select
+        <include refid="baseList"/>
+        from  sys_roles where isDeleted=false
+        limit #{currPage}, #{pageSize}
+    </select>
+
+    <!--    查询总记录条件-->
+    <select id="selectCount" resultType="Long">
+            select count(id) from sys_roles;
+    </select>
+
+    <!-- 查询-->
+    <select id="getallRole" parameterType="Role" resultType="Role">
+    select
+    <include refid="baseList"/>
+    from sys_roles
+    where isDeleted=false
+    <if test="id !=null">and id=#{id}</if>
+    <if test="name !=null">and name=#{name}</if>
+    <if test="description !=null">and description=#{description}</if>
+    </select>
+
+    <!--添加角色权限关联表-->
+    <insert id="addRolePermission" parameterType="RolesPermission">
+        insert  into sys_role_permissions
+        (roleId,permissionId)
+        values
+        (#{roleId},#{permissionId})
+    </insert>
+
+    <sql id="rolepermission">
+        roleId,permissionId
+    </sql>
+    <!--中间表查询-->
+    <select id="getRolesPermission" parameterType="RolesPermission" resultType="RolesPermission">
+        select
+        <include refid="rolepermission"/>
+        from sys_role_permissions where roleId=#{roleId}
+    </select>
+
+    <!--删除中间表-->
+    <delete id="delRolePermission" parameterType="RolesPermission">
+        delete  from sys_role_permissions where  1=1
+        <if test="roleId!=null">and roleId=#{roleId}</if>
+        <if test="permissionId!=null">and permissionId=#{permissionId}</if>
+    </delete>
+</mapper>
